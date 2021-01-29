@@ -37,10 +37,13 @@ def get_urlhash(url):
 
 def normalize(url):
     # trim out url fragment
-    left, right = url.rsplit('/', 1)
-    posi = right.find('#')
-    if posi != -1:
-        url = left + right[:posi]
+    parts = url.rsplit('/', 1)
+    if len(parts) == 2:
+        left, right = parts
+        posi = right.find('#')
+        if posi != -1:
+            url = left + '/' + right[:posi]
+    
     if url.endswith("/"):
         return url.rstrip("/")
     return url
