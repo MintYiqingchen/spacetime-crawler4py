@@ -20,7 +20,7 @@ def scraper(url, resp):
 
 
 def extract_next_links(url, soup):
-    atags = soup.find_all(href=is_valid)
+    atags = soup.find_all(href=is_valid, rel=lambda x: (x is None or x != 'nofollow'))
     return [a.get('href') for a in atags]    
 
 def extract_word_freq(pure_content):

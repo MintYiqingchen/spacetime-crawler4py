@@ -1,7 +1,7 @@
 import os
 from spacetime import Node
 from utils.pcc_models import Register
-
+import glob
 def init(df, user_agent, fresh):
     reg = df.read_one(Register, user_agent)
     if not reg:
@@ -23,4 +23,4 @@ def get_cache_server(config, restart):
     init_node = Node(
         init, Types=[Register], dataframe=(config.host, config.port))
     return init_node.start(
-        config.user_agent, restart or not os.path.exists(config.save_file))
+        config.user_agent, restart or not glob.glob(config.save_file+'.*'))
