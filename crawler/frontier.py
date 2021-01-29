@@ -1,5 +1,6 @@
 import os
 import shelve
+import glob
 
 from threading import Thread, RLock
 from queue import Queue, Empty
@@ -15,16 +16,18 @@ class Frontier(object):
         self.config = config
         self.to_be_downloaded = list()
         
-        if not os.path.exists(self.config.save_file) and not restart:
+        save_files = glob.glob(self.config.save_file + '.*')
+        if not save_files and not restart:
             # Save file does not exist, but request to load save.
             self.logger.info(
                 f"Did not find save file {self.config.save_file}, "
                 f"starting from seed.")
-        elif os.path.exists(self.config.save_file) and restart:
+        elif save_files and restart:
             # Save file does exists, but request to start from seed.
             self.logger.info(
                 f"Found save file {self.config.save_file}, deleting it.")
-            os.remove(self.config.save_file)
+            for sf in save_files:
+                os.remove(sf)
         # Load existing save file, or create one if it does not exist.
         self.save = shelve.open(self.config.save_file)
         if restart:

@@ -14,7 +14,6 @@ def scraper(url, resp):
 
 def extract_next_links(url, resp):
     # pickle.dumps
-    print(resp.raw_response)
     # Implementation requred.
     # 1. parse resp
     #   1.1 get all url
@@ -58,7 +57,7 @@ def is_valid(url):
     # *.stat.uci.edu/*
     # 	* 
     # today.uci.edu/department/information_computer_sciences/*
-    if re.match(r".*\.((ics|cs|informatics|stat).uci.edu|today.uci.edu/department/information_computer_sciences)(\/.*)?", url):
+    if re.match(r"(.*\.(ics|cs|informatics|stat).uci.edu|today.uci.edu/department/information_computer_sciences)(\/.*)?", url):
         return True
     else: 
         return False
