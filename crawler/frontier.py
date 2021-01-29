@@ -5,7 +5,7 @@ import glob
 from threading import Thread, RLock
 from queue import Queue, Empty
 
-from utils import get_logger, get_urlhash, normalize
+from utils import get_logger, get_urlhash, normalize, UrlInfo
 from scraper import is_valid
 
 # record downloaded URL
@@ -44,9 +44,9 @@ class Frontier(object):
         ''' This function can be overridden for alternate saving techniques. '''
         total_count = len(self.save)
         tbd_count = 0
-        for url, completed in self.save.values():
-            if not completed and is_valid(url):
-                self.to_be_downloaded.append(url)
+        for urlInfo in self.save.values():
+            if not urlInfo.completed and is_valid(urlInfo.url):
+                self.to_be_downloaded.append(urlInfo.url)
                 tbd_count += 1
         self.logger.info(
             f"Found {tbd_count} urls to be downloaded from {total_count} "
@@ -62,16 +62,16 @@ class Frontier(object):
         url = normalize(url)
         urlhash = get_urlhash(url)
         if urlhash not in self.save:
-            self.save[urlhash] = (url, False)
+            self.save[urlhash] = UrlInfo(url)
             self.save.sync()
             self.to_be_downloaded.append(url)
     
-    def mark_url_complete(self, url):
+    def mark_url_complete(self, url, urlInfo):
         urlhash = get_urlhash(url)
         if urlhash not in self.save:
             # This should not happen.
             self.logger.error(
                 f"Completed url {url}, but have not seen it before.")
 
-        self.save[urlhash] = (url, True)
+        self.save[urlhash] = urlInfo
         self.save.sync()

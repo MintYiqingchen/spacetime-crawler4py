@@ -3,6 +3,12 @@ import logging
 from hashlib import sha256
 from urllib.parse import urlparse
 
+class UrlInfo(object):
+    def __init__(self, url, completed = False, wordCount = 0):
+        self.url = url
+        self.completed = completed
+        self.wordCount = wordCount
+        
 def get_logger(name, filename=None):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)

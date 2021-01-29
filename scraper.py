@@ -3,48 +3,35 @@ from urllib.parse import urlparse
 import pickle
 from bs4 import BeautifulSoup
 from utils.word_freq import WordFreq
-from report import Report
-
+from utils import UrlInfo
 
 # TODO: How many subdomains did you find in the ics.uci.edu domain?
 def scraper(url, resp):
     if resp.raw_response is None:
-        return list()
+        return list(), UrlInfo(url, True), None
     html = resp.raw_response.text
     soup = BeautifulSoup(html, 'html.parser')
     links = extract_next_links(url, soup)
 
-    pure_content = soup.text()
-    extract_word_freq(pure_content)
+    pure_content = soup.text
+    token_list = extract_word_freq(pure_content)
 
-    return links
+    return links, UrlInfo(url, True, len(token_list)), token_list
 
 
 def extract_next_links(url, soup):
     atags = soup.find_all(href=is_valid)
     return [a.get('href') for a in atags]    
 
-def extract_word_freq(url, pure_content):
+def extract_word_freq(pure_content):
     parsed_content = WordFreq(pure_content)
     # tokenize
     token_lst = parsed_content.tokenize()
-    # filter out stop word
-    filtered_lst = parsed_content.filter_stop(token_lst)
-    # get number of words in this page
-    page_len = len(filtered_lst)
-    Report.page_length = max(Report.page_length, page_len)
-    if page_len > Report.page_length:
-        Report.page_length = page_len
-        Report.longest_page_url = url
-
-    for i in filtered_lst:
-        if i not in Report.word_freq:
-            Report.word_freq[i] = 0
-        Report.word_freq[i] += 1
-
+    return token_lst
 
 def is_valid(url):
-    # TODO: change it to verify the url is in xxx domains
+    if url is None:
+        return False
     # * *.ics.uci.edu/*
     # *.cs.uci.edu/*
     # *.informatics.uci.edu/*
@@ -54,7 +41,6 @@ def is_valid(url):
         return True
     else: 
         return False
-
 
     try:
         parsed = urlparse(url)
