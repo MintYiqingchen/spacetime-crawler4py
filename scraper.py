@@ -2,31 +2,29 @@ import re
 from urllib.parse import urlparse
 import pickle
 from bs4 import BeautifulSoup
-from word_freq import WordFreq
-import report
+from utils.word_freq import WordFreq
+from report import Report
 
 
 # TODO: How many subdomains did you find in the ics.uci.edu domain?
 def scraper(url, resp):
-    links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    if resp.raw_response is None:
+        return list()
+    html = resp.raw_response.text
+    soup = BeautifulSoup(html, 'html.parser')
+    links = extract_next_links(url, soup)
+
+    pure_content = soup.text()
+    extract_word_freq(pure_content)
+
+    return links
 
 
-def extract_next_links(url, resp):
-    # pickle.dumps
-    # Implementation requred.
-    # 1. parse resp
-    #   1.1 get all url
-    #   1.2 clean up hmtl 
-    #   1.3 tokenize + filter stop word + count work
-    print("hello "+url)
-    print(is_valid(url))
-    return list()
+def extract_next_links(url, soup):
+    atags = soup.find_all(href=is_valid)
+    return [a.get('href') for a in atags]    
 
-
-def extract_word_freq(url, content):
-    soup = BeautifulSoup(content, 'html.parser')
-    pure_content = soup.get_text()
+def extract_word_freq(url, pure_content):
     parsed_content = WordFreq(pure_content)
     # tokenize
     token_lst = parsed_content.tokenize()
@@ -47,15 +45,10 @@ def extract_word_freq(url, content):
 
 def is_valid(url):
     # TODO: change it to verify the url is in xxx domains
-    
     # * *.ics.uci.edu/*
-    # 	* 
     # *.cs.uci.edu/*
-    # 	* 
     # *.informatics.uci.edu/*
-    # 	* 
     # *.stat.uci.edu/*
-    # 	* 
     # today.uci.edu/department/information_computer_sciences/*
     if re.match(r"(.*\.(ics|cs|informatics|stat).uci.edu|today.uci.edu/department/information_computer_sciences)(\/.*)?", url):
         return True
