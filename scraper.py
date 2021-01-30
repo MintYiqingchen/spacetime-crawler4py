@@ -7,7 +7,7 @@ from utils import UrlInfo
 
 # TODO: How many subdomains did you find in the ics.uci.edu domain?
 def scraper(url, resp):
-    if resp.raw_response is None:
+    if resp.status != 200 or resp.raw_response is None:
         return list(), UrlInfo(url, True), None
     html = resp.raw_response.text
     soup = BeautifulSoup(html, 'html.parser')
@@ -37,9 +37,7 @@ def is_valid(url):
     # *.informatics.uci.edu/*
     # *.stat.uci.edu/*
     # today.uci.edu/department/information_computer_sciences/*
-    if re.match(r"(.*\.(ics|cs|informatics|stat).uci.edu|today.uci.edu/department/information_computer_sciences)(\/.*)?", url):
-        return True
-    else: 
+    if not re.match(r"(.*\.(ics|cs|informatics|stat).uci.edu|today.uci.edu/department/information_computer_sciences)(\/.*)?", url):
         return False
 
     try:
