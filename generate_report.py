@@ -16,7 +16,7 @@ if __name__ == '__main__':
             a = len(wordTuple)
             if a > longestPair[1]:
                 longestPair = (url, a)
-            counter.update(filter_stop(wordTuple))
+            counter.update(wordTuple)
 
             parsed = urlparse(url)
             if re.match(r".+\.ics.uci.edu", parsed.netloc):

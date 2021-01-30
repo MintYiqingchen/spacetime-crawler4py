@@ -41,6 +41,12 @@ def normalize(url):
     if len(parts) == 2:
         left, right = parts
         posi = right.find('#')
+
+        # # trim query ??
+        # posi1 = right.find('?', 0, posi)
+        # if posi1 != -1 and posi1 < posi:
+        #     posi = posi1
+
         if posi != -1:
             url = left + '/' + right[:posi]
     

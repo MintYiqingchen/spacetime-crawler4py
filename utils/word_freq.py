@@ -23,8 +23,7 @@ class WordFreq:
     def tokenize(self):
         lst = []
         for line in self.file.splitlines():
-        #for line in self.file:
-            for word in line.rstrip().lower().split(" "):
+            for word in line.strip().lower().split(" "):
                 word = word.strip(string.punctuation)
                 new_word = ''
                 for c in word:
