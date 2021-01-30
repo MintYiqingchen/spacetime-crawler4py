@@ -10,7 +10,7 @@ def scraper(url, resp):
     if resp.status != 200 or resp.raw_response is None:
         return list(), UrlInfo(url, True), None
     html = resp.raw_response.text
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, 'html.parser').body
     links = extract_next_links(url, soup)
 
     pure_content = soup.text

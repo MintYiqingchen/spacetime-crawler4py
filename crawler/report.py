@@ -31,4 +31,4 @@ class Reporter(object):
         if words is None:
             return
         urlhash = get_urlhash(url)
-        self.save[urlhash] = tuple(words)
+        self.save[urlhash] = (url, tuple(words))

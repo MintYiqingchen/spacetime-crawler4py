@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 
 
 class WordFreq:
+    STOPWORDS = set(stopwords.words('english'))
     def __init__(self, file):
         self.file = file
 
@@ -33,10 +34,8 @@ class WordFreq:
                     lst.append(new_word)
         return lst
 
-
-    def filter_stop(self, token_list):
-        stop_words = set(stopwords.words('english'))
-        return [w for w in token_list if not w in stop_words]
+def filter_stop(token_list):
+    return [w for w in token_list if not w in WordFreq.STOPWORDS]
 
 
 
