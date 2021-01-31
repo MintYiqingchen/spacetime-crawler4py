@@ -53,13 +53,18 @@ def is_valid(url):
 
     try:
         parsed = urlparse(url)
-        if parsed.scheme not in set(["http", "https"]) or parsed.netloc.find('://') != -1:
+        if parsed.scheme not in {"http", "https"} or parsed.netloc.find('://') != -1:
             return False
         if not re.match(r'.*\.(ics|cs|informatics|stat).uci.edu$|today.uci.edu$', parsed.netloc):
             return False
         if parsed.netloc == 'today.uci.edu' and not re.match(r'\/*department/information_computer_sciences(\/.*)?', parsed.path):
             return False
-            
+        # special rules for trash pages:
+        if parsed.path.find('wp-json') != -1: # example: https://ngs.ics.uci.edu/wp-json/wp/v2/posts/1234
+            return False
+        # example: https://wics.ics.uci.edu/events/category/wics-meeting-2/2016-09-30/
+        if parsed.query.find('ical') != -1 or (parsed.netloc == 'wics.ics.uci.edu' and parsed.path.find('event') != -1):
+            return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -67,7 +72,7 @@ def is_valid(url):
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1|xml|json"
-            + r"|thmx|mso|arff|rtf|jar|csv"
+            + r"|thmx|mso|arff|rtf|jar|csv|embed"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:

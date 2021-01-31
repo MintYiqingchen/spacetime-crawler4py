@@ -2,7 +2,7 @@ import os
 import shelve
 import glob
 
-from threading import Thread, RLock
+from threading import Lock
 from queue import Queue, Empty
 
 from utils import get_logger, get_urlhash
@@ -26,9 +26,12 @@ class Reporter(object):
                 os.remove(sf)
         # Load existing save file, or create one if it does not exist.
         self.save = shelve.open(self.config.word_file)
-    
+        self.save_lock = Lock()
+
     def add_words(self, url, words):
         if words is None:
             return
         urlhash = get_urlhash(url)
-        self.save[urlhash] = (url, tuple(words))
+        with self.save_lock:
+            self.save[urlhash] = (url, tuple(words))
+            self.save.sync()

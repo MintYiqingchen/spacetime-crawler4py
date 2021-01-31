@@ -1,20 +1,16 @@
 import os
 import shelve
 import glob
-
-from threading import Thread, RLock
-from queue import Queue, Empty
-
 from utils import get_logger, get_urlhash, normalize, UrlInfo
 from scraper import is_valid
+from queue import Queue, Empty
+from threading import Lock
 
-# record downloaded URL
-# TODO: uniqueness of URL
 class Frontier(object):
-    def __init__(self, config, restart):
+    def __init__(self, config, restart, throttle_q):
         self.logger = get_logger("FRONTIER")
         self.config = config
-        self.to_be_downloaded = list()
+        self.to_be_downloaded = Queue()
         
         save_files = glob.glob(self.config.save_file + '.*')
         if not save_files and not restart:
@@ -30,6 +26,8 @@ class Frontier(object):
                 os.remove(sf)
         # Load existing save file, or create one if it does not exist.
         self.save = shelve.open(self.config.save_file)
+        self.save_lock = Lock()
+
         if restart:
             for url in self.config.seed_urls:
                 self.add_url(url)
@@ -40,38 +38,49 @@ class Frontier(object):
                 for url in self.config.seed_urls:
                     self.add_url(url)
 
+        self.throttle_q = throttle_q
+
     def _parse_save_file(self):
         ''' This function can be overridden for alternate saving techniques. '''
         total_count = len(self.save)
         tbd_count = 0
         for urlInfo in self.save.values():
             if not urlInfo.completed and is_valid(urlInfo.url):
-                self.to_be_downloaded.append(urlInfo.url)
+                self.to_be_downloaded.put(urlInfo.url)
                 tbd_count += 1
         self.logger.info(
             f"Found {tbd_count} urls to be downloaded from {total_count} "
             f"total urls discovered.")
 
     def get_tbd_url(self):
-        try:
-            return self.to_be_downloaded.pop()
-        except IndexError:
+        self.throttle_q.get() # get token to do throttle
+
+        try: # exit when the queue keep empty for a long time
+            return self.to_be_downloaded.get(True, self.config.time_delay*10.0)
+        except Empty:
             return None
 
     def add_url(self, url):
         url = normalize(url)
         urlhash = get_urlhash(url)
-        if urlhash not in self.save:
-            self.save[urlhash] = UrlInfo(url)
-            self.save.sync()
-            self.to_be_downloaded.append(url)
+        
+        should_put = False
+        with self.save_lock:
+            if urlhash not in self.save:
+                self.save[urlhash] = UrlInfo(url)
+                self.save.sync()
+                should_put = True
+        
+        if should_put:
+            self.to_be_downloaded.put(url)
     
     def mark_url_complete(self, url, urlInfo):
         urlhash = get_urlhash(url)
-        if urlhash not in self.save:
-            # This should not happen.
-            self.logger.error(
-                f"Completed url {url}, but have not seen it before.")
+        with self.save_lock:
+            if urlhash not in self.save:
+                # This should not happen.
+                self.logger.error(
+                    f"Completed url {url}, but have not seen it before.")
 
-        self.save[urlhash] = urlInfo
-        self.save.sync()
+            self.save[urlhash] = urlInfo
+            self.save.sync()

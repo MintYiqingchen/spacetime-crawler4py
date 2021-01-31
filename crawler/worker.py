@@ -1,5 +1,5 @@
 from threading import Thread
-
+from queue import Full
 from utils.download import download
 from utils import get_logger
 from scraper import scraper
@@ -29,4 +29,18 @@ class Worker(Thread):
                 self.frontier.add_url(scraped_url)
             self.reporter.add_words(tbd_url, token_list)
             self.frontier.mark_url_complete(tbd_url, urlInfo)
+            # time.sleep(self.config.time_delay)
+
+class LeakyBucket(Thread):
+    def __init__(self, config, q, term_event):
+        self.config = config
+        self.q = q
+        self.term_event = term_event
+
+    def run(self):
+        while not self.term_event.is_set():
+            try:
+                self.q.put_nowait(1)
+            except Full:
+                pass
             time.sleep(self.config.time_delay)
