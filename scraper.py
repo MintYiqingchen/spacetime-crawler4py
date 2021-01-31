@@ -9,17 +9,20 @@ import logging
 def scraper(url, resp):
     if resp.status >= 600:
         logging.getLogger('CRAWLER').error(f'{resp.error}: {url}')
-
-    if resp.status != 200 or resp.raw_response is None:
+        return list(), UrlInfo(url, True), None
+    if resp.raw_response is None:
         return list(), UrlInfo(url, True), None
 
     html = resp.raw_response.text
     soup = BeautifulSoup(html, 'html.parser')
+    # remove style and script
+    for tag in soup.find_all(['style', 'script']):
+        tag.decompose()
+
     links = extract_next_links(url, soup)
 
-    
     if soup.body:
-        pure_content = soup.body.text
+        pure_content = soup.text
         token_list = extract_word_freq(pure_content)
     else:
         return links, UrlInfo(url, True), None
