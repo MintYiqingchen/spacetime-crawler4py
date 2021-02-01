@@ -33,6 +33,7 @@ class Worker(Thread):
 
 class LeakyBucket(Thread):
     def __init__(self, config, q, term_event):
+        super().__init__(daemon=True)
         self.config = config
         self.q = q
         self.term_event = term_event
