@@ -12,6 +12,8 @@ if __name__ == '__main__':
     subdomainCounter = Counter()
     longestPair = (None, -1)
     with shelve.open(filename) as save:
+        print("----------------UNIQUE URLS---------------")
+        print(len(save))
         for url, wordTuple in save.values():
             a = len(wordTuple)
             if a > longestPair[1]:
@@ -21,7 +23,7 @@ if __name__ == '__main__':
             parsed = urlparse(url)
             if re.match(r".+\.ics.uci.edu", parsed.netloc):
                 subdomainCounter[parsed.scheme + '://' + parsed.netloc] += 1
-
+    
     print("----------------LONGEST---------------")
     print(longestPair[0], ' ', longestPair[1])
     print("----------------MOST COMMON---------------")
